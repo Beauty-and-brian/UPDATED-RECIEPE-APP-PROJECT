@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEAUTY_EXEC_OS // V9_ULTRA</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --neon-green: #00ff88;
+            --cyber-yellow: #f1c40f;
+            --bg-body: #f8fafc;
+            --bg-panel: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #cbd5e1;
+            --nav-bg: #000000;
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #020617;
+            --bg-panel: #0f172a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            transition: 0.3s ease;
+        }
+
+        header {
+            background: var(--nav-bg);
+            color: white;
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid var(--neon-green);
+            position: sticky; top: 0; z-index: 1000;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr 350px;
+            gap: 20px;
+            padding: 25px;
+            max-width: 1700px;
+            margin: auto;
+        }
+
+        @media (max-width: 1200px) { .main-layout { grid-template-columns: 1fr; } }
+
+        .glass-panel {
+            background: var(--bg-panel);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        /* CUSTOM SCROLLBARS */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--neon-green); border-radius: 10px; }
+
+        .btn-exec {
+            background: var(--neon-green);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            display: flex; align-items: center; gap: 8px;
+            transition: 0.2s;
+        }
+
+        .btn-exec:hover { background: var(--cyber-yellow); transform: translateY(-2px); }
+
+        .btn-share {
+            background: var(--cyber-yellow);
+            color: #000;
+        }
+
+        /* RUNNING TRACKER UI */
+        .track-container {
+            background: var(--bg-body);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            position: relative;
+            margin-top: 15px;
+        }
+
+        .run-path {
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            position: relative;
+            margin-top: 30px;
+            border-radius: 2px;
+        }
+
+        #runner {
+            position: absolute;
+            top: -25px;
+            left: 0%;
+            transition: left 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: var(--neon-green);
+            text-shadow: 0 0 10px var(--neon-green);
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 2000;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-body {
+            background: var(--bg-panel);
+            max-width: 550px; width: 90%;
+            margin: 30px auto;
+            border-radius: 20px;
+            border: 2px solid var(--neon-green);
+            overflow: hidden;
+        }
+
+        .modal-scroll { max-height: 70vh; overflow-y: auto; padding: 25px; }
+
+        .form-label { font-size: 0.65rem; font-weight: 900; color: var(--neon-green); text-transform: uppercase; margin-bottom: 5px; display: block; }
+        
+        input, textarea, select {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            background: var(--bg-body); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-main); font-weight: 600; box-sizing: border-box;
+        }
+
+        .recipe-item {
+            background: var(--bg-body); border-radius: 10px; padding: 10px;
+            margin-bottom: 10px; display: flex; align-items: center; gap: 12px;
+            cursor: pointer; border: 1px solid transparent;
+        }
+        .recipe-item:hover { border-color: var(--neon-green); }
+        .recipe-item img { width: 55px; height: 55px; border-radius: 6px; object-fit: cover; }
+    </style>
+</head>
+<body data-theme="light">
+
+<header>
+    <div style="display:flex; align-items:center; gap:12px;">
+        <i class="fas fa-dna" style="color:var(--neon-green); font-size: 1.4rem;"></i>
+        <h1 style="margin:0; font-size: 1.1rem; letter-spacing: 2px; font-weight: 900;">BEAUTY_EXEC_V9</h1>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <button class="btn-exec" style="background:#334155; color:white;" onclick="UI.toggleTheme()"><i class="fas fa-moon"></i></button>
+        <button class="btn-exec" onclick="UI.openModal()"><i class="fas fa-plus"></i> NEW_DATA</button>
+    </div>
+</header>
+
+<div class="main-layout">
+    <aside class="glass-panel">
+        <h4 style="margin:0 0 15px 0; color:var(--text-muted); font-size:0.7rem; border-bottom:1px solid var(--border);">PROTOCOL_ARCHIVE</h4>
+        <div id="archive-list"></div>
+    </aside>
+
+    <main id="workspace" class="glass-panel">
+        <div style="text-align:center; padding-top:120px; opacity:0.3;">
+            <i class="fas fa-fingerprint fa-5x" style="color:var(--neon-green)"></i>
+            <h3>WAITING_FOR_INPUT</h3>
+        </div>
+    </main>
+
+    <aside>
+        <div class="glass-panel" style="margin-bottom:20px;">
+            <h4 style="margin:0 0 15px 0; color:var(--text-muted); font-size:0.7rem; border-bottom:1px solid var(--border);">DAILY_ORCHESTRATION</h4>
+            <div id="planner-ui"></div>
+        </div>
+
+        <div class="glass-panel">
+            <h4 style="margin:0 0 15px 0; color:var(--text-muted); font-size:0.7rem; border-bottom:1px solid var(--border);">BIOMETRIC_OFFSET</h4>
+            <div class="track-container">
+                <div id="km-text" style="font-size: 2.2rem; font-weight: 900; color: var(--neon-green); text-align:center;">0.0 KM</div>
+                <div class="run-path">
+                    <div id="runner"><i class="fas fa-running fa-2x"></i></div>
+                </div>
+                <p style="font-size: 0.6rem; text-align:center; margin-top:10px; font-weight: 800; opacity: 0.6;">REQUIRED_CARDIO_TO_BALANCE</p>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<div id="recipeModal" class="modal">
+    <div class="modal-body">
+        <div style="background:var(--neon-green); padding:15px; color:#000; font-weight:900; text-align:center;">INITIATE_DATA_ENTRY</div>
+        <div class="modal-scroll">
+            <input type="hidden" id="edit-index" value="-1">
+            <span class="form-label">Dish Name</span>
+            <input type="text" id="f-name" placeholder="E.G. GREEN_DETOX_BOWL">
+            
+            <span class="form-label">Calorie Count (kCal)</span>
+            <input type="number" id="f-cals" placeholder="450">
+
+            <span class="form-label">Visual Capture</span>
+            <input type="file" id="f-image" accept="image/*">
+            <div id="comp-log" style="font-size:0.6rem; color:var(--neon-green); margin-bottom:15px;"></div>
+
+            <span class="form-label">Ingredients</span>
+            <textarea id="f-ing" rows="4" placeholder="Enter ingredients..."></textarea>
+
+            <span class="form-label">Method</span>
+            <textarea id="f-steps" rows="5" placeholder="Step-by-step instructions..."></textarea>
+
+            <button class="btn-exec" style="width:100%; justify-content:center;" onclick="App.save()">COMMIT_TO_MEMORY</button>
+            <button onclick="UI.closeModal()" style="width:100%; background:none; border:none; color:var(--text-muted); padding:15px; cursor:pointer;">EXIT_PROCEDURE</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const App = {
+        recipes: JSON.parse(localStorage.getItem('v9_data')) || [],
+        plan: JSON.parse(localStorage.getItem('v9_plan')) || { Breakfast: null, Lunch: null, Dinner: null },
+        currentImg: "",
+
+        init() { UI.renderAll(); },
+
+        save() {
+            const idx = parseInt(document.getElementById('edit-index').value);
+            const name = document.getElementById('f-name').value;
+            if(!name) return alert("System requires Protocol Name.");
+
+            const entry = {
+                name,
+                cals: parseInt(document.getElementById('f-cals').value) || 0,
+                ing: document.getElementById('f-ing').value.split('\n'),
+                steps: document.getElementById('f-steps').value,
+                img: this.currentImg || "https://via.placeholder.com/300?text=NO_DATA"
+            };
+
+            if(idx === -1) App.recipes.push(entry);
+            else App.recipes[idx] = entry;
+
+            localStorage.setItem('v9_data', JSON.stringify(App.recipes));
+            UI.closeModal();
+            UI.renderAll();
+        }
+    };
+
+    const UI = {
+        renderAll() {
+            this.renderArchive();
+            this.renderPlanner();
+            this.calc();
+        },
+        renderArchive() {
+            document.getElementById('archive-list').innerHTML = App.recipes.map((r, i) => `
+                <div class="recipe-item" onclick="UI.view(${i})">
+                    <img src="${r.img}">
+                    <div>
+                        <div style="font-weight:900; font-size:0.85rem;">${r.name}</div>
+                        <div style="font-size:0.7rem; color:var(--neon-green); font-weight:bold;">${r.cals} KCAL</div>
+                    </div>
+                </div>
+            `).join('');
+        },
+        renderPlanner() {
+            const slots = ['Breakfast', 'Lunch', 'Dinner'];
+            document.getElementById('planner-ui').innerHTML = slots.map(s => `
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:0.6rem; font-weight:900; color:var(--text-muted);">${s}</label>
+                    <select onchange="App.plan['${s}']=this.value; localStorage.setItem('v9_plan', JSON.stringify(App.plan)); UI.calc();">
+                        <option value="">_NULL_</option>
+                        ${App.recipes.map(r => `<option value="${r.name}" ${App.plan[s] === r.name ? 'selected' : ''}>${r.name}</option>`).join('')}
+                    </select>
+                </div>
+            `).join('');
+        },
+        view(i) {
+            const r = App.recipes[i];
+            document.getElementById('workspace').innerHTML = `
+                <div id="export-node">
+                    <img src="${r.img}" style="width:100%; height:280px; object-fit:cover; border-radius:15px; border:2px solid var(--border); margin-bottom:20px;">
+                    <h1 style="margin:0; color:var(--neon-green); font-size: 2rem;">${r.name}</h1>
+                    <div style="background:var(--neon-green); color:#000; display:inline-block; padding:3px 10px; font-weight:900; border-radius:4px; margin:10px 0;">${r.cals} KCAL</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px; margin-top:20px;">
+                        <div><h4 style="color:var(--cyber-yellow); border-bottom:1px solid var(--border);">MANIFEST</h4><ul style="font-size:0.9rem; line-height:1.6;">${r.ing.map(ing => `<li>${ing}</li>`).join('')}</ul></div>
+                        <div><h4 style="color:var(--cyber-yellow); border-bottom:1px solid var(--border);">PROCEDURE</h4><p style="font-size:0.9rem; white-space:pre-wrap; line-height:1.6;">${r.steps}</p></div>
+                    </div>
+                </div>
+                <div style="margin-top:30px; padding-top:20px; border-top:2px solid var(--border); display:flex; gap:10px;">
+                    <button class="btn-exec" onclick="UI.sharePDF('${r.name}')"><i class="fas fa-file-pdf"></i> PDF</button>
+                    <button class="btn-exec btn-share" onclick="UI.socialShare('${r.name}')"><i class="fas fa-share-alt"></i> SHARE</button>
+                    <button class="btn-exec" style="background:#fecaca; color:#991b1b; margin-left:auto;" onclick="UI.delete(${i})"><i class="fas fa-trash"></i> PURGE</button>
+                </div>
+            `;
+        },
+        calc() {
+            let total = 0;
+            Object.values(App.plan).forEach(n => {
+                const r = App.recipes.find(rec => rec.name === n);
+                if(r) total += r.cals;
+            });
+            const km = (total / 80).toFixed(1);
+            document.getElementById('km-text').innerText = km + " KM";
+            // Set runner position based on KM (capped at 12km for 100% width)
+            const percent = Math.min((km / 12) * 90, 90);
+            document.getElementById('runner').style.left = percent + "%";
+        },
+        sharePDF(name) {
+            const doc = new jspdf.jsPDF();
+            html2canvas(document.getElementById('export-node')).then(canvas => {
+                doc.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, 190, 0);
+                doc.save(`${name}_Protocol.pdf`);
+            });
+        },
+        async socialShare(name) {
+            const shareData = {
+                title: 'Executive Recipe Protocol',
+                text: `Check out this recipe: ${name} from my Beauty Exec Kitchen OS!`,
+                url: window.location.href
+            };
+            try {
+                if (navigator.share) await navigator.share(shareData);
+                else alert("Manual Share: " + shareData.text);
+            } catch (err) { console.log(err); }
+        },
+        delete(i) {
+            if(confirm("Confirm data purge?")) { App.recipes.splice(i, 1); localStorage.setItem('v9_data', JSON.stringify(App.recipes)); UI.renderAll(); document.getElementById('workspace').innerHTML = "PROTOCOL_ERASED"; }
+        },
+        toggleTheme() { document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); },
+        openModal() { document.getElementById('recipeModal').style.display = 'block'; },
+        closeModal() { document.getElementById('recipeModal').style.display = 'none'; }
+    };
+
+    // IMAGE COMPRESSION SYSTEM
+    document.getElementById('f-image').addEventListener('change', function(e) {
+        const reader = new FileReader();
+        const log = document.getElementById('comp-log');
+        log.innerText = "COMPRESSING_BIO_IMAGE...";
+        reader.onload = (ev) => {
+            const img = new Image();
+            img.src = ev.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const scale = 500 / img.width;
+                canvas.width = 500;
+                canvas.height = img.height * scale;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                App.currentImg = canvas.toDataURL('image/jpeg', 0.6);
+                log.innerText = "IMAGE_ENCODED_SUCCESSFULLY";
+            };
+        };
+        if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+    });
+
+    App.init();
+</script>
+
+</body>
+</html>
